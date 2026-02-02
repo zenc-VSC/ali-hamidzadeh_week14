@@ -1,18 +1,23 @@
 import React from "react";
 import ContactsItem from "./ContactsItem";
+import styles from "./ContactsList.module.css";
 
-function ContactsList({ contacts , deleteHandler}) {
+function ContactsList({ contacts, deleteHandler }) {
   return (
-    <div>
+    <div className={styles.container}>
       <h3>ContactsList</h3>
       {contacts.length ? (
-        <ul>
+        <ul className={styles.contacts}>
           {contacts.map((contact) => (
-            <ContactsItem key={contact.id} data={contact}  deleteHandler={deleteHandler}/>
+            <ContactsItem
+              key={contact.id}
+              data={contact}
+              deleteHandler={deleteHandler}
+            />
           ))}
         </ul>
       ) : (
-        <p>No data yet!</p>
+        <p className={styles.message}>No data yet!</p>
       )}
     </div>
   );
