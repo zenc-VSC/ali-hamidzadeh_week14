@@ -8,6 +8,7 @@ import styles from "./Contacts.module.css";
 function Contacts() {
   const [alert, setAlert] = useState("");
   const [contacts, setContacts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [contact, setContact] = useState({
     id: "",
     name: "",
@@ -49,6 +50,14 @@ function Contacts() {
     const newContacts = contacts.filter((contact) => contact.id !== id);
     setContacts(newContacts);
   };
+  const filteredContacts = contacts.filter((contact) => {
+    return (
+      contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.phone.includes(searchTerm)
+    );
+  });
   return (
     <div className={styles.container}>
       <div className={styles.form}>
@@ -64,8 +73,17 @@ function Contacts() {
         ))}
         <button onClick={addHandler}>Add Contact</button>
       </div>
+      <div className={styles.searchBox}>
+        <input
+          type="text"
+          placeholder="Search Contacts"
+          onChange={(event) => {
+            setSearchTerm(event.target.value);
+          }}
+        />
+      </div>
       <div className={styles.alert}>{alert && <p>{alert}</p>}</div>
-      <ContactsList contacts={contacts} deleteHandler={deleteHandler} />
+      <ContactsList contacts={filteredContacts} deleteHandler={deleteHandler} />
     </div>
   );
 }

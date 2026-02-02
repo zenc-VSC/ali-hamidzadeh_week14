@@ -54,6 +54,21 @@
   border-radius: 5px;
 }
 
+.searchBox {
+  width: 100%;
+  margin: 20px 0;
+}
+.searchBox input {
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 1rem;
+  border: 2px solid #eaeaea;
+}
+.searchBox input:focus {
+  outline: none;
+}
+
 @media (max-width: 500px) {
   .form input {
     width: 90%;
