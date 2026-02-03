@@ -37,8 +37,23 @@ function Contacts() {
     ) {
       setAlert("Please enter valid data!");
       return;
+    } else if (contact.name.length + contact.lastName.length < 7) {
+      setAlert("Name and LastName must be at least 7 characters!");
+      return;
     }
+    const phoneRegex = /^[0-9]+$/;
+    if (!phoneRegex.test(contact.phone)) {
+      setAlert("Phone number must contain only numbers!");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contact.email)) {
+      setAlert("Please enter a valid email!");
+      return;
+    }
+
     setAlert("");
+
     const newContact = { ...contact, id: v4() };
     setContacts((contacts) => [...contacts, newContact]);
     setContact({
