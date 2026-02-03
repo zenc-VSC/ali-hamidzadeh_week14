@@ -68,6 +68,58 @@
 .searchBox input:focus {
   outline: none;
 }
+.buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.buttons button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.changeButton {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.cancel {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancel:hover {
+  background-color: #c82333;
+}
+
+.searchBox {
+  margin: 20px 0;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0000001a;
+}
+
+.searchBox input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #4a90e2;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.searchBox input:focus {
+  outline: none;
+  border-color: #357abd;
+  box-shadow: 0 0 0 3px #4a90e21a;
+}
 
 @media (max-width: 500px) {
   .form input {

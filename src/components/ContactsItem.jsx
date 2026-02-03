@@ -4,6 +4,7 @@ import styles from "./ContactsItem.module.css";
 function ContactsItem({
   data: { id, name, lastName, email, phone },
   deleteHandler,
+  editHandler,
 }) {
   return (
     <li className={styles.item}>
@@ -17,6 +18,7 @@ function ContactsItem({
         <span>📞</span> {phone}
       </p>
       <button onClick={() => deleteHandler(id)}>🗑️</button>
+      <button onClick={() => editHandler(id)}>✏️</button>
     </li>
   );
 }

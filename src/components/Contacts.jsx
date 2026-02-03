@@ -9,6 +9,8 @@ function Contacts() {
   const [alert, setAlert] = useState("");
   const [contacts, setContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [contact, setContact] = useState({
     id: "",
     name: "",
@@ -25,6 +27,7 @@ function Contacts() {
       [name]: value,
     }));
   };
+
   const addHandler = () => {
     if (
       !contact.name ||
@@ -44,20 +47,66 @@ function Contacts() {
       email: "",
       phone: "",
     });
-    console.log(contacts);
   };
+
+  const editHandler = (id) => {
+    const contactToEdit = contacts.find((contact) => contact.id === id);
+    setContact(contactToEdit);
+    setIsEditing(true);
+    setEditId(id);
+  };
+
+  const updateHandler = () => {
+    if (
+      !contact.name ||
+      !contact.lastName ||
+      !contact.email ||
+      !contact.phone
+    ) {
+      setAlert("Please enter valid data!");
+      return;
+    }
+
+    setAlert("");
+    const updatedContacts = contacts.map((event) =>
+      event.id === editId ? { ...contact } : event,
+    );
+    setContacts(updatedContacts);
+    setContact({
+      name: "",
+      lastName: "",
+      email: "",
+      phone: "",
+    });
+    setIsEditing(false);
+    setEditId(null);
+  };
+
+  const cancelEdit = () => {
+    setContact({
+      name: "",
+      lastName: "",
+      email: "",
+      phone: "",
+    });
+    setIsEditing(false);
+    setEditId(null);
+    setAlert("");
+  };
+
   const deleteHandler = (id) => {
     const newContacts = contacts.filter((contact) => contact.id !== id);
     setContacts(newContacts);
   };
-  const filteredContacts = contacts.filter((contact) => {
-    return (
+
+  const filteredContacts = contacts.filter(
+    (contact) =>
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.phone.includes(searchTerm)
-    );
-  });
+      contact.phone.includes(searchTerm),
+  );
+
   return (
     <div className={styles.container}>
       <div className={styles.form}>
@@ -71,19 +120,36 @@ function Contacts() {
             onChange={changeHandler}
           />
         ))}
-        <button onClick={addHandler}>Add Contact</button>
+        <div className={styles.buttons}>
+          <button
+            onClick={isEditing ? updateHandler : addHandler}
+            className={styles.changeButton}
+          >
+            {isEditing ? "Update Contact" : "Add Contact"}
+          </button>
+          {isEditing && (
+            <button onClick={cancelEdit} className={styles.cancel}>
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
+
       <div className={styles.searchBox}>
         <input
           type="text"
-          placeholder="Search Contacts"
-          onChange={(event) => {
-            setSearchTerm(event.target.value);
-          }}
+          placeholder="Search contacts"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
+
       <div className={styles.alert}>{alert && <p>{alert}</p>}</div>
-      <ContactsList contacts={filteredContacts} deleteHandler={deleteHandler} />
+      <ContactsList
+        contacts={filteredContacts}
+        deleteHandler={deleteHandler}
+        editHandler={editHandler}
+      />
     </div>
   );
 }
