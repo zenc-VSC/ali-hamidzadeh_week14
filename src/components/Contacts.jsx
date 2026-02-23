@@ -4,10 +4,11 @@ import ContactsList from "./ContactsList.jsx";
 import inputs from "../constants/inputs.js";
 import { v4 } from "uuid";
 import styles from "./Contacts.module.css";
+import useLocalStorage from "../Hooks/useLocalStorage.js";
 
 function Contacts() {
   const [alert, setAlert] = useState("");
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useLocalStorage("contacts", []);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
