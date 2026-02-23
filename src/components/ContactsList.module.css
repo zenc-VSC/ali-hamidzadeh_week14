@@ -26,3 +26,26 @@
   font-size: 1.2rem;
   font-weight: 500;
 }
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.selectAll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #555;
+  user-select: none;
+}
+
+.selectAll input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #e74c3c;
+}

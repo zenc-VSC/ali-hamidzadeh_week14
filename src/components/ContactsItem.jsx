@@ -5,9 +5,16 @@ function ContactsItem({
   data: { id, name, lastName, email, phone },
   deleteHandler,
   editHandler,
+  isSelected,
+  onSelect,
 }) {
   return (
     <li className={styles.item}>
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={() => onSelect(id)}
+      />
       <p>
         {name} {lastName}
       </p>

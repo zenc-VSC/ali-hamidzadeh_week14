@@ -120,6 +120,25 @@
   border-color: #357abd;
   box-shadow: 0 0 0 3px #4a90e21a;
 }
+.bulkActions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0;
+}
+
+.bulkDelete {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.bulkDelete:hover {
+  background: #c0392b;
+}
 
 @media (max-width: 500px) {
   .form input {

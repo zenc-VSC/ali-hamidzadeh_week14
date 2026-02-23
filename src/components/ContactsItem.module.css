@@ -33,3 +33,48 @@
 .item button:hover{
     font-size: 1.5rem;
 }
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.8rem 1rem;
+  background: white;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  list-style: none;
+}
+
+.item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #e74c3c;
+  flex-shrink: 0;
+}
+
+.item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+  flex: 1;
+}
+
+.item p span {
+  margin-right: 4px;
+}
+
+.item button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.item button:hover {
+  background: #f0f0f0;
+}

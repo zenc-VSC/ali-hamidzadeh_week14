@@ -10,6 +10,7 @@ import ConfirmModal from "./ConfirmModal.jsx";
 function Contacts() {
   const [alert, setAlert] = useState("");
   const [contacts, setContacts] = useLocalStorage("contacts", []);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -118,14 +119,38 @@ function Contacts() {
     setShowModal(true);
   };
   const confirmDelete = () => {
-    setContacts((prev) => prev.filter((c) => c.id !== pendingDeleteId));
+    if (pendingDeleteId === "bulk") {
+      setContacts((prev) => prev.filter((c) => !selectedIds.includes(c.id)));
+      setSelectedIds([]);
+    } else {
+      setContacts((prev) => prev.filter((c) => c.id !== pendingDeleteId));
+    }
     setShowModal(false);
     setPendingDeleteId(null);
   };
-
   const cancelDelete = () => {
     setShowModal(false);
     setPendingDeleteId(null);
+  };
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id],
+    );
+  };
+
+  const bulkDeleteHandler = () => {
+    setPendingDeleteId("bulk");
+    setShowModal(true);
+  };
+  const selectAllHandler = () => {
+    if (
+      selectedIds.length === filteredContacts.length &&
+      filteredContacts.length > 0
+    ) {
+      setSelectedIds([]); // deselect all
+    } else {
+      setSelectedIds(filteredContacts.map((c) => c.id)); // select all
+    }
   };
 
   const filteredContacts = contacts.filter(
@@ -172,19 +197,35 @@ function Contacts() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
+      {selectedIds.length > 0 && (
+        <button onClick={bulkDeleteHandler} className={styles.bulkDelete}>
+          🗑️ Delete {selectedIds.length} selected
+        </button>
+      )}
 
       <div className={styles.alert}>{alert && <p>{alert}</p>}</div>
       <ContactsList
         contacts={filteredContacts}
         deleteHandler={deleteHandler}
         editHandler={editHandler}
+        selectedIds={selectedIds}
+        toggleSelect={toggleSelect}
+        selectAllHandler={selectAllHandler}
+        allSelected={
+          selectedIds.length === filteredContacts.length &&
+          filteredContacts.length > 0
+        }
       />
       {showModal && (
         <ConfirmModal
-          message="Are you sure you want to delete this contact?"
-          onConfirm={confirmDelete}
-          onCancel={cancelDelete}
-        />
+    message={
+      pendingDeleteId === "bulk"
+        ? `Are you sure you want to delete ${selectedIds.length} contacts?`
+        : "Are you sure you want to delete this contact?"
+    }
+    onConfirm={confirmDelete}
+    onCancel={cancelDelete}
+  />
       )}
     </div>
   );
