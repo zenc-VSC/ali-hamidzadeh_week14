@@ -1,16 +1,22 @@
 import React from "react";
 
-function ConfirmModal({onConfirm, onCancel, message}) {
+import styles from "./ConfirmModal.module.css";
+
+function ConfirmModal({ onConfirm, onCancel, message }) {
   return (
-    <>
-      <div>
-        <p>{message}</p>
-        <div>
-          <button onClick={onConfirm}>Yes, Delete</button>
-          <button onClick={onCancel}>Cancel</button>
+    <div className={styles.container}>
+      <div className={styles.modal}>
+        <p className={styles.message}>{message}</p>
+        <div className={styles.buttons}>
+          <button className={styles.confirm} onClick={onConfirm}>
+            Yes, Delete
+          </button>
+          <button className={styles.cancel} onClick={onCancel}>
+            Cancel
+          </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
