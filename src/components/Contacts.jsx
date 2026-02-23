@@ -5,13 +5,16 @@ import inputs from "../constants/inputs.js";
 import { v4 } from "uuid";
 import styles from "./Contacts.module.css";
 import useLocalStorage from "../Hooks/useLocalStorage.js";
+import ConfirmModal from "./ConfirmModal.jsx";
 
 function Contacts() {
   const [alert, setAlert] = useState("");
   const [contacts, setContacts] = useLocalStorage("contacts", []);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [contact, setContact] = useState({
     id: "",
     name: "",
@@ -111,8 +114,18 @@ function Contacts() {
   };
 
   const deleteHandler = (id) => {
-    const newContacts = contacts.filter((contact) => contact.id !== id);
-    setContacts(newContacts);
+    setPendingDeleteId(id);
+    setShowModal(true);
+  };
+  const confirmDelete = () => {
+    setContacts((prev) => prev.filter((c) => c.id !== pendingDeleteId));
+    setShowModal(false);
+    setPendingDeleteId(null);
+  };
+
+  const cancelDelete = () => {
+    setShowModal(false);
+    setPendingDeleteId(null);
   };
 
   const filteredContacts = contacts.filter(
@@ -166,6 +179,13 @@ function Contacts() {
         deleteHandler={deleteHandler}
         editHandler={editHandler}
       />
+      {showModal && (
+        <ConfirmModal
+          message="Are you sure you want to delete this contact?"
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
     </div>
   );
 }
