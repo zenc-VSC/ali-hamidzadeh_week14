@@ -44,7 +44,6 @@ function validateContact({ name, lastName, email, phone }) {
   return null;
 }
 
-// ✅ اصلاح ۱: SSR guard برای localStorage
 function getStoredContacts() {
   if (typeof window === "undefined") return [];
   try {
@@ -63,7 +62,6 @@ function init() {
     isEditing: false,
     showModal: false,
     editId: null,
-    // ✅ اصلاح ۲: جایگزینی magic string "bulk" با فیلد مجزا
     pendingDeleteId: null,
     isBulkDelete: false,
     contact: emptyContact,
@@ -128,12 +126,11 @@ function contactsReducer(state, action) {
       return {
         ...state,
         pendingDeleteId: action.payload,
-        isBulkDelete: false, // ✅
+        isBulkDelete: false,
         showModal: true,
       };
 
     case ACTIONS.CONFIRM_DELETE:
-      // ✅ اصلاح ۲: بررسی با isBulkDelete به جای magic string
       if (state.isBulkDelete) {
         return {
           ...state,
@@ -159,7 +156,7 @@ function contactsReducer(state, action) {
         ...state,
         showModal: false,
         pendingDeleteId: null,
-        isBulkDelete: false, // ✅
+        isBulkDelete: false,
       };
 
     case ACTIONS.TOGGLE_SELECT:
@@ -173,7 +170,7 @@ function contactsReducer(state, action) {
     case ACTIONS.BULK_DELETE:
       return {
         ...state,
-        isBulkDelete: true, // ✅
+        isBulkDelete: true,
         pendingDeleteId: null,
         showModal: true,
       };
@@ -284,7 +281,6 @@ export function ContactsProvider({ children }) {
     });
   }, [state.selectedIds, filteredContacts]);
 
-  // ✅ اصلاح ۳: dependency array کامل برای useMemo
   const value = useMemo(
     () => ({
       ...state,
