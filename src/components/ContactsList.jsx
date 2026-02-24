@@ -1,21 +1,20 @@
 import React from "react";
 import ContactsItem from "./ContactsItem";
 import styles from "./ContactsList.module.css";
+import { useContacts } from "./ContactsContext.jsx";
 
-function ContactsList({
-  contacts,
-  deleteHandler,
-  editHandler,
-  selectedIds,
-  toggleSelect,
-  selectAllHandler,
-  allSelected,
-}) {
+function ContactsList() {
+  const { filteredContacts, selectedIds, selectAllHandler } = useContacts();
+
+  const allSelected =
+    selectedIds.length === filteredContacts.length &&
+    filteredContacts.length > 0;
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h3>Contacts List</h3>
-        {contacts.length > 0 && (
+        {filteredContacts.length > 0 && (
           <label className={styles.selectAll}>
             <input
               type="checkbox"
@@ -27,17 +26,10 @@ function ContactsList({
         )}
       </div>
 
-      {contacts.length ? (
+      {filteredContacts.length ? (
         <ul className={styles.contacts}>
-          {contacts.map((contact) => (
-            <ContactsItem
-              key={contact.id}
-              data={contact}
-              deleteHandler={deleteHandler}
-              editHandler={editHandler}
-              isSelected={selectedIds.includes(contact.id)}
-              onSelect={toggleSelect}
-            />
+          {filteredContacts.map((contact) => (
+            <ContactsItem key={contact.id} data={contact} />
           ))}
         </ul>
       ) : (
