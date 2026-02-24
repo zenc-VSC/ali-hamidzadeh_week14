@@ -4,6 +4,7 @@ import {
   useReducer,
   useEffect,
   useMemo,
+  useCallback,
 } from "react";
 import { v4 } from "uuid";
 
@@ -31,17 +32,43 @@ export const ACTIONS = {
 
 const emptyContact = { id: "", name: "", lastName: "", email: "", phone: "" };
 
-const initialState = {
-  alert: "",
-  contacts: JSON.parse(localStorage.getItem("contacts")) || [],
-  selectedIds: [],
-  searchTerm: "",
-  isEditing: false,
-  showModal: false,
-  editId: null,
-  pendingDeleteId: null,
-  contact: emptyContact,
-};
+const phoneRegex = /^[0-9]+$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateContact({ name, lastName, email, phone }) {
+  if (!name || !lastName || !email || !phone) return "Please enter valid data!";
+  if (name.length + lastName.length < 7)
+    return "Name and LastName must be at least 7 characters!";
+  if (!phoneRegex.test(phone)) return "Phone number must contain only numbers!";
+  if (!emailRegex.test(email)) return "Please enter a valid email!";
+  return null;
+}
+
+// ✅ اصلاح ۱: SSR guard برای localStorage
+function getStoredContacts() {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem("contacts")) || [];
+  } catch {
+    return [];
+  }
+}
+
+function init() {
+  return {
+    alert: "",
+    contacts: getStoredContacts(),
+    selectedIds: [],
+    searchTerm: "",
+    isEditing: false,
+    showModal: false,
+    editId: null,
+    // ✅ اصلاح ۲: جایگزینی magic string "bulk" با فیلد مجزا
+    pendingDeleteId: null,
+    isBulkDelete: false,
+    contact: emptyContact,
+  };
+}
 
 function contactsReducer(state, action) {
   switch (action.type) {
@@ -98,10 +125,16 @@ function contactsReducer(state, action) {
       };
 
     case ACTIONS.DELETE_CONTACT:
-      return { ...state, pendingDeleteId: action.payload, showModal: true };
+      return {
+        ...state,
+        pendingDeleteId: action.payload,
+        isBulkDelete: false, // ✅
+        showModal: true,
+      };
 
     case ACTIONS.CONFIRM_DELETE:
-      if (state.pendingDeleteId === "bulk") {
+      // ✅ اصلاح ۲: بررسی با isBulkDelete به جای magic string
+      if (state.isBulkDelete) {
         return {
           ...state,
           contacts: state.contacts.filter(
@@ -110,6 +143,7 @@ function contactsReducer(state, action) {
           selectedIds: [],
           showModal: false,
           pendingDeleteId: null,
+          isBulkDelete: false,
         };
       }
       return {
@@ -117,10 +151,16 @@ function contactsReducer(state, action) {
         contacts: state.contacts.filter((c) => c.id !== state.pendingDeleteId),
         showModal: false,
         pendingDeleteId: null,
+        isBulkDelete: false,
       };
 
     case ACTIONS.CANCEL_DELETE:
-      return { ...state, showModal: false, pendingDeleteId: null };
+      return {
+        ...state,
+        showModal: false,
+        pendingDeleteId: null,
+        isBulkDelete: false, // ✅
+      };
 
     case ACTIONS.TOGGLE_SELECT:
       return {
@@ -131,7 +171,12 @@ function contactsReducer(state, action) {
       };
 
     case ACTIONS.BULK_DELETE:
-      return { ...state, pendingDeleteId: "bulk", showModal: true };
+      return {
+        ...state,
+        isBulkDelete: true, // ✅
+        pendingDeleteId: null,
+        showModal: true,
+      };
 
     case ACTIONS.SELECT_ALL:
       return { ...state, selectedIds: action.payload };
@@ -141,23 +186,13 @@ function contactsReducer(state, action) {
   }
 }
 
-const phoneRegex = /^[0-9]+$/;
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validateContact({ name, lastName, email, phone }) {
-  if (!name || !lastName || !email || !phone) return "Please enter valid data!";
-  if (name.length + lastName.length < 7)
-    return "Name and LastName must be at least 7 characters!";
-  if (!phoneRegex.test(phone)) return "Phone number must contain only numbers!";
-  if (!emailRegex.test(email)) return "Please enter a valid email!";
-  return null;
-}
-
 export function ContactsProvider({ children }) {
-  const [state, dispatch] = useReducer(contactsReducer, initialState);
+  const [state, dispatch] = useReducer(contactsReducer, null, init);
 
   useEffect(() => {
-    localStorage.setItem("contacts", JSON.stringify(state.contacts));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("contacts", JSON.stringify(state.contacts));
+    }
   }, [state.contacts]);
 
   const filteredContacts = useMemo(
@@ -172,70 +207,118 @@ export function ContactsProvider({ children }) {
     [state.contacts, state.searchTerm],
   );
 
-  const changeHandler = (e) =>
-    dispatch({
-      type: ACTIONS.CHANGE_FIELD,
-      payload: { name: e.target.name, value: e.target.value },
-    });
+  const changeHandler = useCallback(
+    (e) =>
+      dispatch({
+        type: ACTIONS.CHANGE_FIELD,
+        payload: { name: e.target.name, value: e.target.value },
+      }),
+    [],
+  );
 
-  const setSearchTerm = (value) =>
-    dispatch({ type: ACTIONS.SET_SEARCH, payload: value });
+  const setSearchTerm = useCallback(
+    (value) => dispatch({ type: ACTIONS.SET_SEARCH, payload: value }),
+    [],
+  );
 
-  const addHandler = () => {
+  const addHandler = useCallback(() => {
     const error = validateContact(state.contact);
     if (error) return dispatch({ type: ACTIONS.SET_ALERT, payload: error });
     dispatch({
       type: ACTIONS.ADD_CONTACT,
       payload: { ...state.contact, id: v4() },
     });
-  };
+  }, [state.contact]);
 
-  const editHandler = (id) => {
-    const found = state.contacts.find((e) => e.id === id);
-    dispatch({ type: ACTIONS.EDIT_CONTACT, payload: found });
-  };
+  const editHandler = useCallback(
+    (id) => {
+      const found = state.contacts.find((e) => e.id === id);
+      if (found) dispatch({ type: ACTIONS.EDIT_CONTACT, payload: found });
+    },
+    [state.contacts],
+  );
 
-  const updateHandler = () => {
+  const updateHandler = useCallback(() => {
     const error = validateContact(state.contact);
     if (error) return dispatch({ type: ACTIONS.SET_ALERT, payload: error });
     dispatch({ type: ACTIONS.UPDATE_CONTACT });
-  };
+  }, [state.contact]);
 
-  const cancelEdit = () => dispatch({ type: ACTIONS.CANCEL_EDIT });
-  const deleteHandler = (id) =>
-    dispatch({ type: ACTIONS.DELETE_CONTACT, payload: id });
-  const confirmDelete = () => dispatch({ type: ACTIONS.CONFIRM_DELETE });
-  const cancelDelete = () => dispatch({ type: ACTIONS.CANCEL_DELETE });
-  const toggleSelect = (id) =>
-    dispatch({ type: ACTIONS.TOGGLE_SELECT, payload: id });
-  const bulkDeleteHandler = () => dispatch({ type: ACTIONS.BULK_DELETE });
+  const cancelEdit = useCallback(
+    () => dispatch({ type: ACTIONS.CANCEL_EDIT }),
+    [],
+  );
 
-  const selectAllHandler = () => {
+  const deleteHandler = useCallback(
+    (id) => dispatch({ type: ACTIONS.DELETE_CONTACT, payload: id }),
+    [],
+  );
+
+  const confirmDelete = useCallback(
+    () => dispatch({ type: ACTIONS.CONFIRM_DELETE }),
+    [],
+  );
+
+  const cancelDelete = useCallback(
+    () => dispatch({ type: ACTIONS.CANCEL_DELETE }),
+    [],
+  );
+
+  const toggleSelect = useCallback(
+    (id) => dispatch({ type: ACTIONS.TOGGLE_SELECT, payload: id }),
+    [],
+  );
+
+  const bulkDeleteHandler = useCallback(
+    () => dispatch({ type: ACTIONS.BULK_DELETE }),
+    [],
+  );
+
+  const selectAllHandler = useCallback(() => {
     const allSelected =
       state.selectedIds.length === filteredContacts.length &&
       filteredContacts.length > 0;
     dispatch({
       type: ACTIONS.SELECT_ALL,
-      payload: allSelected ? [] : filteredContacts.map((e) => c.id),
+      payload: allSelected ? [] : filteredContacts.map((e) => e.id),
     });
-  };
+  }, [state.selectedIds, filteredContacts]);
 
-  const value = {
-    ...state,
-    filteredContacts,
-    setSearchTerm,
-    changeHandler,
-    addHandler,
-    editHandler,
-    updateHandler,
-    cancelEdit,
-    deleteHandler,
-    confirmDelete,
-    cancelDelete,
-    toggleSelect,
-    bulkDeleteHandler,
-    selectAllHandler,
-  };
+  // ✅ اصلاح ۳: dependency array کامل برای useMemo
+  const value = useMemo(
+    () => ({
+      ...state,
+      filteredContacts,
+      setSearchTerm,
+      changeHandler,
+      addHandler,
+      editHandler,
+      updateHandler,
+      cancelEdit,
+      deleteHandler,
+      confirmDelete,
+      cancelDelete,
+      toggleSelect,
+      bulkDeleteHandler,
+      selectAllHandler,
+    }),
+    [
+      state,
+      filteredContacts,
+      setSearchTerm,
+      changeHandler,
+      addHandler,
+      editHandler,
+      updateHandler,
+      cancelEdit,
+      deleteHandler,
+      confirmDelete,
+      cancelDelete,
+      toggleSelect,
+      bulkDeleteHandler,
+      selectAllHandler,
+    ],
+  );
 
   return (
     <ContactsContext.Provider value={value}>
